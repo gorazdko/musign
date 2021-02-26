@@ -35,13 +35,18 @@ enum Opt {
     },
     /// Verify
     Verify {
-        /// test interactive
-        #[clap(short, long)]
-        interactive: bool,
-        /// test all
-        #[clap(short)]
-        all: bool,
-        files: Vec<String>,
+        /// Signature file
+        #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short)]
+        signature_file: Option<PathBuf>,
+        /// Signature as string
+        #[clap(conflicts_with = "signature-file", short = 'g')]
+        signature_string: Option<String>,
+        /// Signature file
+        #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short)]
+        message_file: Option<PathBuf>,
+        /// Signature as string
+        #[clap(conflicts_with = "message-file", short = 'a')]
+        message_string: Option<String>,
     },
 }
 
