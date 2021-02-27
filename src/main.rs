@@ -1,5 +1,9 @@
 use clap::{Clap, ValueHint};
 use std::path::PathBuf;
+extern crate secp256k1;
+
+//use secp256k1::rand::rngs::OsRng;
+use secp256k1::{PublicKey, Secp256k1, SecretKey};
 
 #[derive(Clap, Debug, PartialEq)]
 enum Signature {
