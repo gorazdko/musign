@@ -1,15 +1,23 @@
 use clap::{Clap, ValueHint};
 use std::path::PathBuf;
+extern crate hex;
 extern crate secp256k1;
 
 //use secp256k1::rand::rngs::OsRng;
+use secp256k1::rand::rngs::OsRng;
 use secp256k1::{PublicKey, Secp256k1, SecretKey};
-extern crate bitcoin_hashes;
 
 #[derive(Clap, Debug, PartialEq)]
 enum Signature {
     ECDSA,
     Schnorr,
+}
+
+fn generate_keypair(seed: Vec<u8>, _sig_type: Signature) -> (SecretKey, PublicKey) {
+    let secp = Secp256k1::new();
+    let secret_key = SecretKey::from_slice(&seed).expect("seed should be 32 bytes (64 characters)");
+    let public_key = PublicKey::from_secret_key(&secp, &secret_key);
+    (secret_key, public_key)
 }
 
 #[derive(Clap, Debug)]
@@ -18,6 +26,8 @@ enum Signature {
 enum Opt {
     /// Generate a keypair
     Generate {
+        /// Seed in hex string
+        seed: String,
         /// Purpose
         #[clap(arg_enum, default_value = "ecdsa")]
         sig_type: Signature,
@@ -60,24 +70,28 @@ fn main() {
 
     println!("{:?}", matches);
 
-    /*
-        match matches {
-            Opt::Sign {
-                dry_run,
-                all,
-                repository,
-            } => {
-                // here is where you call a function e.g. sign
-                println!("{:?} {:?} {:?}", dry_run, all, repository)
-            }
-            Opt::Verify {
-                interactive,
-                all,
-                files,
-            } => {
-                // here is where you call a function e.g. sign
-                println!("{:?} {:?} {:?}", interactive, all, files)
-            }
-        };
-    */
+    match matches {
+        Opt::Generate { seed, sig_type } => {
+            let seed = hex::decode(seed).expect("Decoding seed failed");
+            let (seckey, pubkey) = generate_keypair(seed, sig_type);
+            println!("private key: {:?}", seckey.to_string());
+            println!("public key: {:?}", seckey.to_string());
+        }
+        Opt::Sign {
+            dry_run,
+            all,
+            repository,
+        } => {
+            // here is where you call a function e.g. sign
+            println!("{:?} {:?} {:?}", dry_run, all, repository)
+        }
+        Opt::Verify {
+            interactive,
+            all,
+            files,
+        } => {
+            // here is where you call a function e.g. sign
+            println!("{:?} {:?} {:?}", interactive, all, files)
+        }
+    };
 }

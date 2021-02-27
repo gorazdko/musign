@@ -8,5 +8,5 @@ edition = "2018"
 
 [dependencies]
 clap = "3.0.0-beta.2"
-secp256k1 = "0.20.1"
-bitcoin_hashes = "0.9.4"
+secp256k1 = {version = "0.20.1", features = ["bitcoin_hashes", "rand-std" ]}
+hex = "0.4.2"
