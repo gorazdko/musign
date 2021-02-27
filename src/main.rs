@@ -50,7 +50,7 @@ fn verify(pubkey: String, msg: String, signature: String, _sig_type: SigType) ->
 
 #[derive(Debug, Clap)]
 #[clap(group = ArgGroup::new("seck").required(true))]
-pub struct Sign2 {
+pub struct CmdSign {
     /// Public key file
     #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short, long, group="seck")]
     seckey_file: Option<PathBuf>,
@@ -64,6 +64,27 @@ pub struct Sign2 {
     #[clap(conflicts_with = "FILE", short = 'm')]
     msg_string: Option<String>,
     /// Signature type
+    #[clap(arg_enum, default_value = "ecdsa")]
+    sig_type: SigType,
+}
+
+#[derive(Debug, Clap)]
+#[clap(group = ArgGroup::new("msg").required(true))]
+pub struct CmdVerify {
+    #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short)]
+    signature_file: Option<PathBuf>,
+    /// Signature as string
+    #[clap(short = 'g')]
+    signature_string: Option<String>,
+    /// Signature file
+    #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short, group = "msg")]
+    message_file: Option<PathBuf>,
+    /// Signature as string
+    #[clap(group = "msg", short = 'y')]
+    message_string: Option<String>,
+    /// Public key in hey string
+    #[clap(short = 'p', required = true)]
+    pubkey_string: String,
     #[clap(arg_enum, default_value = "ecdsa")]
     sig_type: SigType,
 }
@@ -82,47 +103,10 @@ enum Opt {
     },
 
     //#[clap(subcommand)]
-    Command2(Sign2),
+    Sign(CmdSign),
 
-    //#[clap(group = ArgGroup::new("seck").required(false))]
-    /// Sign
-    Sign {
-        /// Public key file
-        #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short, long, group="seck")]
-        seckey_file: Option<PathBuf>,
-        /// Public key string in hex
-        #[clap(long, short = 't', group = "seck")]
-        seckey_string: Option<String>,
-        /// File to sign
-        #[clap(name = "FILE", parse(from_os_str), value_hint = ValueHint::AnyPath)]
-        file: PathBuf,
-        /// Message string to sign. Must be 32 bytes.
-        #[clap(conflicts_with = "FILE", short = 'm')]
-        msg_string: Option<String>,
-        /// Signature type
-        #[clap(arg_enum, default_value = "ecdsa")]
-        sig_type: SigType,
-    },
     /// Verify
-    Verify {
-        /// Signature file
-        #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short)]
-        signature_file: Option<PathBuf>,
-        /// Signature as string
-        #[clap(conflicts_with = "signature-file", short = 'g')]
-        signature_string: Option<String>,
-        /// Signature file
-        #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short)]
-        message_file: Option<PathBuf>,
-        /// Signature as string
-        #[clap(conflicts_with = "message-file", short = 'a')]
-        message_string: Option<String>,
-        /// Public key in hey string
-        #[clap(short = 'p', required = true)]
-        pubkey_string: String,
-        #[clap(arg_enum, default_value = "ecdsa")]
-        sig_type: SigType,
-    },
+    Verify(CmdVerify),
 }
 
 fn main() {
@@ -137,17 +121,11 @@ fn main() {
             println!("private key: {:?}", seckey.to_string());
             println!("public key: {:?}", pubkey.to_string());
         }
-        Opt::Sign {
-            seckey_file: _,
-            seckey_string,
-            file: _,
-            msg_string,
-            sig_type,
-        } => {
+        Opt::Sign(cmd) => {
             let res = sign(
-                seckey_string.expect("error private key string"),
-                msg_string.expect("error: msg string"),
-                sig_type,
+                cmd.seckey_string.expect("error private key string"),
+                cmd.msg_string.expect("error: msg string"),
+                cmd.sig_type,
             );
 
             if res {
@@ -157,19 +135,12 @@ fn main() {
             }
         }
 
-        Opt::Verify {
-            signature_file: _,
-            signature_string,
-            message_file: _,
-            message_string,
-            pubkey_string,
-            sig_type,
-        } => {
+        Opt::Verify(cmd) => {
             verify(
-                pubkey_string,
-                message_string.expect("error: msg string"),
-                signature_string.expect("sig string"),
-                sig_type,
+                cmd.pubkey_string,
+                cmd.message_string.expect("error: msg string"),
+                cmd.signature_string.expect("sig string"),
+                cmd.sig_type,
             );
         }
         _ => println!("dd"),
