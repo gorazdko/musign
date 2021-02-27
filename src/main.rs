@@ -1,4 +1,4 @@
-use clap::{Clap, ValueHint};
+use clap::{ArgGroup, Clap, ValueHint};
 use std::path::PathBuf;
 use std::str::FromStr;
 extern crate hex;
@@ -48,6 +48,26 @@ fn verify(pubkey: String, msg: String, signature: String, _sig_type: SigType) ->
     }
 }
 
+#[derive(Debug, Clap)]
+#[clap(group = ArgGroup::new("seck").required(true))]
+pub struct Sign2 {
+    /// Public key file
+    #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short, long, group="seck")]
+    seckey_file: Option<PathBuf>,
+    /// Public key string in hex
+    #[clap(long, short = 't', group = "seck")]
+    seckey_string: Option<String>,
+    /// File to sign
+    #[clap(name = "FILE", parse(from_os_str), value_hint = ValueHint::AnyPath)]
+    file: PathBuf,
+    /// Message string to sign. Must be 32 bytes.
+    #[clap(conflicts_with = "FILE", short = 'm')]
+    msg_string: Option<String>,
+    /// Signature type
+    #[clap(arg_enum, default_value = "ecdsa")]
+    sig_type: SigType,
+}
+
 #[derive(Clap, Debug)]
 #[clap(name = "musig-cli")]
 /// Generate secp256k1 keys, sign and verify messages with ECDSA and Schnorr
@@ -61,13 +81,17 @@ enum Opt {
         sig_type: SigType,
     },
 
+    //#[clap(subcommand)]
+    Command2(Sign2),
+
+    //#[clap(group = ArgGroup::new("seck").required(false))]
     /// Sign
     Sign {
         /// Public key file
-        #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short)]
+        #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short, long, group="seck")]
         seckey_file: Option<PathBuf>,
         /// Public key string in hex
-        #[clap(conflicts_with = "seckey-file", short = 't')]
+        #[clap(long, short = 't', group = "seck")]
         seckey_string: Option<String>,
         /// File to sign
         #[clap(name = "FILE", parse(from_os_str), value_hint = ValueHint::AnyPath)]
@@ -148,5 +172,6 @@ fn main() {
                 sig_type,
             );
         }
+        _ => println!("dd"),
     };
 }
