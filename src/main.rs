@@ -6,7 +6,6 @@ extern crate secp256k1;
 use secp256k1::bitcoin_hashes::sha256;
 
 //use secp256k1::rand::rngs::OsRng;
-use secp256k1::rand::rngs::OsRng;
 use secp256k1::{Message, PublicKey, Secp256k1, SecretKey, Signature};
 
 #[derive(Clap, Debug, PartialEq)]
@@ -97,6 +96,8 @@ enum Opt {
         /// Public key in hey string
         #[clap(short = 'p', required = true)]
         pubkey_string: String,
+        #[clap(arg_enum, default_value = "ecdsa")]
+        sig_type: SigType,
     },
 }
 
@@ -111,24 +112,41 @@ fn main() {
             let (seckey, pubkey) = generate_keypair(seed, sig_type);
             println!("private key: {:?}", seckey.to_string());
             println!("public key: {:?}", pubkey.to_string());
-        } /*
+        }
         Opt::Sign {
-        dry_run,
-        all,
-        repository,
+            seckey_file: _,
+            seckey_string,
+            file: _,
+            msg_string,
+            sig_type,
         } => {
-        // here is where you call a function e.g. sign
-        println!("{:?} {:?} {:?}", dry_run, all, repository)
+            let res = sign(
+                seckey_string.expect("error private key string"),
+                msg_string.expect("error: msg string"),
+                sig_type,
+            );
+
+            if res {
+                println!("OK");
+            } else {
+                println!("NOK");
+            }
         }
+
         Opt::Verify {
-        interactive,
-        all,
-        files,
+            signature_file: _,
+            signature_string,
+            message_file: _,
+            message_string,
+            pubkey_string,
+            sig_type,
         } => {
-        // here is where you call a function e.g. sign
-        println!("{:?} {:?} {:?}", interactive, all, files)
+            verify(
+                pubkey_string,
+                message_string.expect("error: msg string"),
+                signature_string.expect("sig string"),
+                sig_type,
+            );
         }
-         */
-        _ => println!("Ain't special"),
     };
 }
