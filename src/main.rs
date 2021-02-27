@@ -4,6 +4,7 @@ extern crate secp256k1;
 
 //use secp256k1::rand::rngs::OsRng;
 use secp256k1::{PublicKey, Secp256k1, SecretKey};
+extern crate bitcoin_hashes;
 
 #[derive(Clap, Debug, PartialEq)]
 enum Signature {
