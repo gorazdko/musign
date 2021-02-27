@@ -37,10 +37,10 @@ enum Opt {
     Sign {
         /// Public key file
         #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short)]
-        pubkey_file: Option<PathBuf>,
+        seckey_file: Option<PathBuf>,
         /// Public key string in hex
-        #[clap(conflicts_with = "pubkey-file", short = 's')]
-        pubkey_string: Option<String>,
+        #[clap(conflicts_with = "seckey-file", short = 't')]
+        seckey_string: Option<String>,
         /// File to sign
         #[clap(name = "FILE", parse(from_os_str), value_hint = ValueHint::AnyPath)]
         file: PathBuf,
@@ -62,6 +62,9 @@ enum Opt {
         /// Signature as string
         #[clap(conflicts_with = "message-file", short = 'a')]
         message_string: Option<String>,
+        /// Public key in hey string
+        #[clap(short = 'p', required = true)]
+        pubkey_string: String,
     },
 }
 
@@ -75,23 +78,25 @@ fn main() {
             let seed = hex::decode(seed).expect("Decoding seed failed");
             let (seckey, pubkey) = generate_keypair(seed, sig_type);
             println!("private key: {:?}", seckey.to_string());
-            println!("public key: {:?}", seckey.to_string());
-        }
+            println!("public key: {:?}", pubkey.to_string());
+        } /*
         Opt::Sign {
-            dry_run,
-            all,
-            repository,
+        dry_run,
+        all,
+        repository,
         } => {
-            // here is where you call a function e.g. sign
-            println!("{:?} {:?} {:?}", dry_run, all, repository)
+        // here is where you call a function e.g. sign
+        println!("{:?} {:?} {:?}", dry_run, all, repository)
         }
         Opt::Verify {
-            interactive,
-            all,
-            files,
+        interactive,
+        all,
+        files,
         } => {
-            // here is where you call a function e.g. sign
-            println!("{:?} {:?} {:?}", interactive, all, files)
+        // here is where you call a function e.g. sign
+        println!("{:?} {:?} {:?}", interactive, all, files)
         }
+         */
+        _ => println!("Ain't special"),
     };
 }
