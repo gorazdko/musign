@@ -99,13 +99,13 @@ pub struct CmdSign {
 #[derive(Debug, Clap)]
 #[clap(group = ArgGroup::new("msg").required(true))]
 pub struct CmdVerify {
-    /// Signature as hex string
+    /// Signature in hex
     #[clap(required = true)]
     signature: String,
-    /// Signature as string
+    /// Message string
     #[clap(group = "msg", required = true)]
     message: String,
-    /// Public key in hey string
+    /// Public key in hex
     #[clap(required = true)]
     pubkey: String,
     #[clap(arg_enum, default_value = "ecdsa", short = 't')]
@@ -118,7 +118,7 @@ pub struct CmdVerify {
 enum Opt {
     /// Generate a public key from a secret (private key/seed/secret key)
     Generate {
-        /// Secret (also known as seed, private key or secret key) in hex.
+        /// Secret (also known as seed, private key or secret key) in hex (64 chars).
         secret: String,
         /// Type of signature.
         #[clap(arg_enum, default_value = "ecdsa", short = 't')]
