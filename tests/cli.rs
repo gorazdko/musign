@@ -43,7 +43,7 @@ fn sign_verify() -> Result<(), Box<dyn std::error::Error>> {
     let msg_data = "Hello world!";
     let sig = "3045022100a834a9596c3021524305faa75a83a545780260e059832128d9617f4479876613022036bc08f2aed098d1e598106ab1439d4bcdbed127db73072358a4ca21f3dbd4f2";
 
-    cmd.arg("sign").arg(msg_data).arg("--seckey").arg(privkey);
+    cmd.arg("sign").arg(msg_data).arg("-s").arg(privkey);
 
     cmd.assert().success().stdout(predicate::str::contains(sig));
 
