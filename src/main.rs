@@ -23,6 +23,19 @@ fn generate_schnorr_keypair(seed: String) -> (schnorrsig::KeyPair, schnorrsig::P
     (keypair, pubkey)
 }
 
+fn sign_schnorr(seckey: String, msg: String) -> schnorrsig::Signature {
+    let s = Secp256k1::new();
+    let keypair = schnorrsig::KeyPair::from_seckey_str(&s, &seckey).unwrap();
+    let pubkey = schnorrsig::PublicKey::from_keypair(&s, &keypair);
+
+    let message = Message::from_hashed_data::<sha256::Hash>(msg.as_bytes());
+    let sig = s.schnorrsig_sign(&message, &keypair);
+
+    assert!(s.schnorrsig_verify(&sig, &message, &pubkey).is_ok());
+
+    sig
+}
+
 fn generate_keypair(seed: Vec<u8>) -> (SecretKey, PublicKey) {
     let secp = Secp256k1::new();
     let secret_key = SecretKey::from_slice(&seed).expect("seed should be 32 bytes (64 characters)");
@@ -30,7 +43,7 @@ fn generate_keypair(seed: Vec<u8>) -> (SecretKey, PublicKey) {
     (secret_key, public_key)
 }
 
-fn sign(seckey: String, msg: String, _sig_type: SigType) -> Signature {
+fn sign(seckey: String, msg: String) -> Signature {
     let seckey =
         SecretKey::from_str(&seckey).expect("Private key must be 64 chars long hex string");
 
@@ -113,7 +126,7 @@ enum Opt {
 fn main() {
     let matches = Opt::parse();
 
-    println!("{:?}", matches);
+    println!("{:?}", matches); // TODO: enclose under --verbose
 
     match matches {
         Opt::Generate { seed, sig_type } => {
@@ -131,15 +144,17 @@ fn main() {
             };
         }
         Opt::Sign(cmd) => {
-            let res = sign(
-                cmd.seckey.expect("error private key string"),
-                cmd.msg,
-                cmd.sig_type,
-            );
-
-            println!("{:?}", res.to_string());
+            match cmd.sig_type {
+                SigType::ECDSA => {
+                    let sig = sign(cmd.seckey.expect("error private key string"), cmd.msg);
+                    println!("{:?}", sig.to_string());
+                }
+                SigType::Schnorr => {
+                    let sig = sign_schnorr(cmd.seckey.expect("error private key string"), cmd.msg);
+                    println!("{:?}", sig.to_string());
+                }
+            };
         }
-
         Opt::Verify(cmd) => {
             let res = verify(cmd.signature, cmd.message, cmd.pubkey, cmd.sig_type);
             if res {
