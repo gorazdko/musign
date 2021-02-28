@@ -135,7 +135,7 @@ enum Opt {
 fn main() {
     let matches = Opt::parse();
 
-    println!("{:?}", matches); // TODO: enclose under --verbose
+    println!("DEBUG: {:?}\n", matches); // TODO: enclose under --verbose
 
     match matches {
         Opt::Generate { secret, sig_type } => {
