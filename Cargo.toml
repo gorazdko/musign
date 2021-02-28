@@ -10,3 +10,8 @@ edition = "2018"
 clap = "3.0.0-beta.2"
 secp256k1 = {version = "0.20.1", features = ["bitcoin_hashes", "rand-std" ]}
 hex = "0.4.2"
+
+[dev-dependencies]
+assert_cmd = "0.10"
+predicates = "1"
+tempfile = "3"
