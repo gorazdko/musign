@@ -48,14 +48,13 @@ fn verify_schnorr(signature: String, msg: String, pubkey: String) -> bool {
 
 fn generate_keypair(seed: Vec<u8>) -> (SecretKey, PublicKey) {
     let secp = Secp256k1::new();
-    let secret_key = SecretKey::from_slice(&seed).expect("seed should be 32 bytes (64 characters)");
+    let secret_key = SecretKey::from_slice(&seed).expect("seed error");
     let public_key = PublicKey::from_secret_key(&secp, &secret_key);
     (secret_key, public_key)
 }
 
 fn sign(seckey: String, msg: String) -> Signature {
-    let seckey =
-        SecretKey::from_str(&seckey).expect("Private key must be 64 chars long hex string");
+    let seckey = SecretKey::from_str(&seckey).expect("Private key error");
 
     let message = Message::from_hashed_data::<sha256::Hash>(msg.as_bytes());
     let secp = Secp256k1::new();
@@ -84,16 +83,16 @@ fn verify(signature: String, msg: String, pubkey: String) -> bool {
 #[clap(group = ArgGroup::new("seck").required(true))]
 pub struct CmdSign {
     /// Path to private key (Not implemented)
-    #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short, long, group="seck")]
+    #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short = 'f', group="seck")]
     seckey_file: Option<PathBuf>,
-    /// Private key string in hex
-    #[clap(long, short = 't', group = "seck")]
-    seckey: Option<String>,
+    /// Secret in hex
+    #[clap(group = "seck", short)]
+    secret: Option<String>,
     /// Message to sign.
     #[clap(required = true)]
     msg: String,
     /// Signature type
-    #[clap(arg_enum, default_value = "ecdsa")]
+    #[clap(arg_enum, default_value = "ecdsa", short = 't')]
     sig_type: SigType,
 }
 
@@ -109,7 +108,7 @@ pub struct CmdVerify {
     /// Public key in hey string
     #[clap(required = true)]
     pubkey: String,
-    #[clap(arg_enum, default_value = "ecdsa")]
+    #[clap(arg_enum, default_value = "ecdsa", short = 't')]
     sig_type: SigType,
 }
 
@@ -117,19 +116,19 @@ pub struct CmdVerify {
 #[clap(name = "musig-cli")]
 /// Generate secp256k1 keys, sign and verify messages with ECDSA and Schnorr
 enum Opt {
-    /// Generate a public key from a seed (private key)
+    /// Generate a public key from a secret (private key/seed/secret key)
     Generate {
-        /// Seed (also known as private key or secret key) in hex
-        seed: String,
-        /// Type of signature
-        #[clap(arg_enum, default_value = "ecdsa")]
+        /// Secret (also known as seed, private key or secret key) in hex.
+        secret: String,
+        /// Type of signature.
+        #[clap(arg_enum, default_value = "ecdsa", short = 't')]
         sig_type: SigType,
     },
 
     /// Sign a message. Signature is returned.
     Sign(CmdSign),
 
-    /// Verify a signature for a given message. True returned for a valid signature.
+    /// Verify a signature for a given message. True is returned for a valid signature otherwise False.
     Verify(CmdVerify),
 }
 
@@ -139,8 +138,8 @@ fn main() {
     println!("{:?}", matches); // TODO: enclose under --verbose
 
     match matches {
-        Opt::Generate { seed, sig_type } => {
-            let seed_bytes = hex::decode(seed.clone()).expect("Decoding seed failed");
+        Opt::Generate { secret, sig_type } => {
+            let seed_bytes = hex::decode(secret.clone()).expect("Decoding seed failed");
 
             match sig_type {
                 SigType::ECDSA => {
@@ -148,7 +147,7 @@ fn main() {
                     println!("{:?}", pubkey.to_string());
                 }
                 SigType::Schnorr => {
-                    let (_, pubkey) = generate_schnorr_keypair(seed);
+                    let (_, pubkey) = generate_schnorr_keypair(secret);
                     println!("{:?}", pubkey.to_string());
                 }
             };
@@ -156,11 +155,11 @@ fn main() {
         Opt::Sign(cmd) => {
             match cmd.sig_type {
                 SigType::ECDSA => {
-                    let sig = sign(cmd.seckey.expect("error private key string"), cmd.msg);
+                    let sig = sign(cmd.secret.expect("error private key string"), cmd.msg);
                     println!("{:?}", sig.to_string());
                 }
                 SigType::Schnorr => {
-                    let sig = sign_schnorr(cmd.seckey.expect("error private key string"), cmd.msg);
+                    let sig = sign_schnorr(cmd.secret.expect("error private key string"), cmd.msg);
                     println!("{:?}", sig.to_string());
                 }
             };
