@@ -34,8 +34,8 @@ fn sign(seckey: String, msg: String, _sig_type: SigType) -> Signature {
     sig
 }
 
-fn verify(pubkey: String, msg: String, signature: String, _sig_type: SigType) -> bool {
-    let pubkey = PublicKey::from_str(&pubkey).expect("Public key must be 65 chars long hex string");
+fn verify(signature: String, msg: String, pubkey: String, _sig_type: SigType) -> bool {
+    let pubkey = PublicKey::from_str(&pubkey).unwrap();
     let sig = Signature::from_str(&signature).expect("Signature format incorrect");
 
     let message = Message::from_hashed_data::<sha256::Hash>(msg.as_bytes());
@@ -51,15 +51,15 @@ fn verify(pubkey: String, msg: String, signature: String, _sig_type: SigType) ->
 #[derive(Debug, Clap)]
 #[clap(group = ArgGroup::new("seck").required(true))]
 pub struct CmdSign {
-    /// Public key file
+    /// Path to private key (Not implemented)
     #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short, long, group="seck")]
     seckey_file: Option<PathBuf>,
-    /// Public key string in hex
+    /// Private key string in hex
     #[clap(long, short = 't', group = "seck")]
-    seckey_string: Option<String>,
+    seckey: Option<String>,
     /// Message to sign.
-    #[clap(short = 'm')]
-    msg: Option<String>,
+    #[clap(required = true)]
+    msg: String,
     /// Signature type
     #[clap(arg_enum, default_value = "ecdsa")]
     sig_type: SigType,
@@ -68,20 +68,15 @@ pub struct CmdSign {
 #[derive(Debug, Clap)]
 #[clap(group = ArgGroup::new("msg").required(true))]
 pub struct CmdVerify {
-    #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short)]
-    signature_file: Option<PathBuf>,
+    /// Signature as hex string
+    #[clap(required = true)]
+    signature: String,
     /// Signature as string
-    #[clap(short = 'g')]
-    signature_string: Option<String>,
-    /// Signature file
-    #[clap(parse(from_os_str), value_hint = ValueHint::AnyPath, short, group = "msg")]
-    message_file: Option<PathBuf>,
-    /// Signature as string
-    #[clap(group = "msg", short = 'y')]
-    message_string: Option<String>,
+    #[clap(group = "msg", required = true)]
+    message: String,
     /// Public key in hey string
-    #[clap(short = 'p', required = true)]
-    pubkey_string: String,
+    #[clap(required = true)]
+    pubkey: String,
     #[clap(arg_enum, default_value = "ecdsa")]
     sig_type: SigType,
 }
@@ -120,8 +115,8 @@ fn main() {
         }
         Opt::Sign(cmd) => {
             let res = sign(
-                cmd.seckey_string.expect("error private key string"),
-                cmd.msg.expect("error: msg string"),
+                cmd.seckey.expect("error private key string"),
+                cmd.msg,
                 cmd.sig_type,
             );
 
@@ -129,18 +124,12 @@ fn main() {
         }
 
         Opt::Verify(cmd) => {
-            let res = verify(
-                cmd.pubkey_string,
-                cmd.message_string.expect("error: msg string"),
-                cmd.signature_string.expect("sig string"),
-                cmd.sig_type,
-            );
+            let res = verify(cmd.signature, cmd.message, cmd.pubkey, cmd.sig_type);
             if res {
                 println!("True");
             } else {
                 println!("False");
             }
-        }
-        _ => println!("dd"),
+        } //_ => println!("dd"),
     };
 }
