@@ -57,12 +57,9 @@ pub struct CmdSign {
     /// Public key string in hex
     #[clap(long, short = 't', group = "seck")]
     seckey_string: Option<String>,
-    /// File to sign
-    #[clap(name = "FILE", parse(from_os_str), value_hint = ValueHint::AnyPath)]
-    file: PathBuf,
-    /// Message string to sign. Must be 32 bytes.
-    #[clap(conflicts_with = "FILE", short = 'm')]
-    msg_string: Option<String>,
+    /// Message to sign.
+    #[clap(short = 'm')]
+    msg: Option<String>,
     /// Signature type
     #[clap(arg_enum, default_value = "ecdsa")]
     sig_type: SigType,
@@ -124,24 +121,29 @@ fn main() {
         Opt::Sign(cmd) => {
             let res = sign(
                 cmd.seckey_string.expect("error private key string"),
-                cmd.msg_string.expect("error: msg string"),
+                cmd.msg.expect("error: msg string"),
                 cmd.sig_type,
             );
 
             if res {
-                println!("OK");
+                println!("True");
             } else {
-                println!("NOK");
+                println!("False");
             }
         }
 
         Opt::Verify(cmd) => {
-            verify(
+            let res = verify(
                 cmd.pubkey_string,
                 cmd.message_string.expect("error: msg string"),
                 cmd.signature_string.expect("sig string"),
                 cmd.sig_type,
             );
+            if res {
+                println!("True");
+            } else {
+                println!("False");
+            }
         }
         _ => println!("dd"),
     };
