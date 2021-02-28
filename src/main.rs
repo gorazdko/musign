@@ -21,7 +21,7 @@ fn generate_keypair(seed: Vec<u8>, _sig_type: SigType) -> (SecretKey, PublicKey)
     (secret_key, public_key)
 }
 
-fn sign(seckey: String, msg: String, _sig_type: SigType) -> bool {
+fn sign(seckey: String, msg: String, _sig_type: SigType) -> Signature {
     let seckey =
         SecretKey::from_str(&seckey).expect("Private key must be 64 chars long hex string");
 
@@ -31,7 +31,7 @@ fn sign(seckey: String, msg: String, _sig_type: SigType) -> bool {
     let public_key = PublicKey::from_secret_key(&secp, &seckey);
     assert!(secp.verify(&message, &sig, &public_key).is_ok());
 
-    true
+    sig
 }
 
 fn verify(pubkey: String, msg: String, signature: String, _sig_type: SigType) -> bool {
@@ -125,11 +125,7 @@ fn main() {
                 cmd.sig_type,
             );
 
-            if res {
-                println!("True");
-            } else {
-                println!("False");
-            }
+            println!("{:?}", res.to_string());
         }
 
         Opt::Verify(cmd) => {
