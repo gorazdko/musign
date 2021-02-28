@@ -117,19 +117,19 @@ pub struct CmdVerify {
 #[clap(name = "musig-cli")]
 /// Generate secp256k1 keys, sign and verify messages with ECDSA and Schnorr
 enum Opt {
-    /// Generate a keypair
+    /// Generate a public key from a seed (private key)
     Generate {
-        /// Seed in hex string
+        /// Seed (also known as private key or secret key) in hex
         seed: String,
-        /// Purpose
+        /// Type of signature
         #[clap(arg_enum, default_value = "ecdsa")]
         sig_type: SigType,
     },
 
-    //#[clap(subcommand)]
+    /// Sign a message. Signature is returned.
     Sign(CmdSign),
 
-    /// Verify
+    /// Verify a signature for a given message. True returned for a valid signature.
     Verify(CmdVerify),
 }
 
@@ -145,11 +145,11 @@ fn main() {
             match sig_type {
                 SigType::ECDSA => {
                     let (_, pubkey) = generate_keypair(seed_bytes);
-                    println!("public key: {:?}", pubkey.to_string());
+                    println!("{:?}", pubkey.to_string());
                 }
                 SigType::Schnorr => {
                     let (_, pubkey) = generate_schnorr_keypair(seed);
-                    println!("public key: {:?}", pubkey.to_string());
+                    println!("{:?}", pubkey.to_string());
                 }
             };
         }
@@ -184,8 +184,6 @@ fn main() {
                     }
                 }
             };
-
-            //verify_schnorr
-        } //_ => println!("dd"),
+        }
     };
 }
