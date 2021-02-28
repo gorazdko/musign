@@ -29,7 +29,7 @@ fn sign_schnorr(seckey: String, msg: String) -> schnorrsig::Signature {
     let pubkey = schnorrsig::PublicKey::from_keypair(&s, &keypair);
 
     let message = Message::from_hashed_data::<sha256::Hash>(msg.as_bytes());
-    let sig = s.schnorrsig_sign(&message, &keypair);
+    let sig = s.schnorrsig_sign_no_aux_rand(&message, &keypair);
     assert!(s.schnorrsig_verify(&sig, &message, &pubkey).is_ok());
     sig
 }
