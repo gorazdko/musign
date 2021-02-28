@@ -30,10 +30,20 @@ fn sign_schnorr(seckey: String, msg: String) -> schnorrsig::Signature {
 
     let message = Message::from_hashed_data::<sha256::Hash>(msg.as_bytes());
     let sig = s.schnorrsig_sign(&message, &keypair);
-
     assert!(s.schnorrsig_verify(&sig, &message, &pubkey).is_ok());
-
     sig
+}
+
+fn verify_schnorr(signature: String, msg: String, pubkey: String) -> bool {
+    let s = Secp256k1::new();
+    let pubkey = schnorrsig::PublicKey::from_str(&pubkey).unwrap();
+    let sig = schnorrsig::Signature::from_str(&signature).expect("Signature format incorrect");
+    let message = Message::from_hashed_data::<sha256::Hash>(msg.as_bytes());
+    if s.schnorrsig_verify(&sig, &message, &pubkey).is_ok() {
+        true
+    } else {
+        false
+    }
 }
 
 fn generate_keypair(seed: Vec<u8>) -> (SecretKey, PublicKey) {
@@ -56,7 +66,7 @@ fn sign(seckey: String, msg: String) -> Signature {
     sig
 }
 
-fn verify(signature: String, msg: String, pubkey: String, _sig_type: SigType) -> bool {
+fn verify(signature: String, msg: String, pubkey: String) -> bool {
     let pubkey = PublicKey::from_str(&pubkey).unwrap();
     let sig = Signature::from_str(&signature).expect("Signature format incorrect");
 
@@ -156,12 +166,26 @@ fn main() {
             };
         }
         Opt::Verify(cmd) => {
-            let res = verify(cmd.signature, cmd.message, cmd.pubkey, cmd.sig_type);
-            if res {
-                println!("True");
-            } else {
-                println!("False");
-            }
+            match cmd.sig_type {
+                SigType::ECDSA => {
+                    let res = verify(cmd.signature, cmd.message, cmd.pubkey);
+                    if res {
+                        println!("True");
+                    } else {
+                        println!("False");
+                    }
+                }
+                SigType::Schnorr => {
+                    let res = verify_schnorr(cmd.signature, cmd.message, cmd.pubkey);
+                    if res {
+                        println!("True");
+                    } else {
+                        println!("False");
+                    }
+                }
+            };
+
+            //verify_schnorr
         } //_ => println!("dd"),
     };
 }
