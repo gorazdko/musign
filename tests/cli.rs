@@ -39,9 +39,6 @@ fn generate_keypair() -> Result<(), Box<dyn std::error::Error>> {
 fn sign_verify() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("musig-cli")?;
 
-    // Sign and verify ECDSA
-    // source: https://github.com/rust-bitcoin/rust-secp256k1/blob/3bff59694857ffe9ea7d0c33f7fd531620d2ff43/src/lib.rs#L1271
-
     let privkey = "e6dd32f8761625f105c39a39f19370b3521d845a12456d60ce44debd0a362641";
     let msg_data = "Hello world!";
     let sig = "3045022100a834a9596c3021524305faa75a83a545780260e059832128d9617f4479876613022036bc08f2aed098d1e598106ab1439d4bcdbed127db73072358a4ca21f3dbd4f2";

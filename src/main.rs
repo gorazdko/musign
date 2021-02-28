@@ -6,7 +6,7 @@ extern crate secp256k1;
 use secp256k1::bitcoin_hashes::sha256;
 
 //use secp256k1::rand::rngs::OsRng;
-use secp256k1::{Message, PublicKey, Secp256k1, SecretKey, Signature};
+use secp256k1::{schnorrsig, Message, PublicKey, Secp256k1, SecretKey, Signature};
 
 #[derive(Clap, Debug, PartialEq)]
 enum SigType {
@@ -14,7 +14,16 @@ enum SigType {
     Schnorr,
 }
 
-fn generate_keypair(seed: Vec<u8>, _sig_type: SigType) -> (SecretKey, PublicKey) {
+fn generate_schnorr_keypair(seed: String) -> (schnorrsig::KeyPair, schnorrsig::PublicKey) {
+    let s = Secp256k1::new();
+
+    let keypair = schnorrsig::KeyPair::from_seckey_str(&s, &seed).unwrap();
+
+    let pubkey = schnorrsig::PublicKey::from_keypair(&s, &keypair);
+    (keypair, pubkey)
+}
+
+fn generate_keypair(seed: Vec<u8>) -> (SecretKey, PublicKey) {
     let secp = Secp256k1::new();
     let secret_key = SecretKey::from_slice(&seed).expect("seed should be 32 bytes (64 characters)");
     let public_key = PublicKey::from_secret_key(&secp, &secret_key);
@@ -108,10 +117,18 @@ fn main() {
 
     match matches {
         Opt::Generate { seed, sig_type } => {
-            let seed = hex::decode(seed).expect("Decoding seed failed");
-            let (seckey, pubkey) = generate_keypair(seed, sig_type);
-            println!("private key: {:?}", seckey.to_string());
-            println!("public key: {:?}", pubkey.to_string());
+            let seed_bytes = hex::decode(seed.clone()).expect("Decoding seed failed");
+
+            match sig_type {
+                SigType::ECDSA => {
+                    let (_, pubkey) = generate_keypair(seed_bytes);
+                    println!("public key: {:?}", pubkey.to_string());
+                }
+                SigType::Schnorr => {
+                    let (_, pubkey) = generate_schnorr_keypair(seed);
+                    println!("public key: {:?}", pubkey.to_string());
+                }
+            };
         }
         Opt::Sign(cmd) => {
             let res = sign(
